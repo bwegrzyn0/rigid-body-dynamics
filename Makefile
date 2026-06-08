@@ -1,5 +1,5 @@
 CC = g++
-SRC = src/main.cpp src/shader.cpp src/glad.c 
+SRC = src/*.cpp src/*.c
 INCLUDES = -I include/
 OUTPUT = -o main
 LIBS = -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl 

@@ -4,6 +4,9 @@
 #include "shader.h"
 #include <fstream>
 #include <sstream>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 Shader::Shader(const char* vertexPath, const char* fragmentPath) {
 	// load sources for both shaders
@@ -14,11 +17,11 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath) {
 	std::string fragmentShaderSource;
 
 	if (!vertex.is_open()) {
-		std::cout << "Error opening vertex shader." << std::endl;
+		std::cout << "Error opening vertex shader" << std::endl;
 	}
 
 	if (!fragment.is_open()) {
-		std::cout << "Error opening fragment shader." << std::endl;
+		std::cout << "Error opening fragment shader" << std::endl;
 	}
 
 	std::stringstream vertexSourceStream, fragmentSourceStream;
@@ -32,6 +35,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath) {
 	const char* vertexShaderCode = vertexShaderSource.c_str();
 	const char* fragmentShaderCode = fragmentShaderSource.c_str();
 
+	// compile shaders
 	unsigned int vertexShader;
 	vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertexShader, 1, &vertexShaderCode, NULL);
@@ -56,34 +60,43 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath) {
 		std::cout << "Fragment shader compilation failed: " << infoLog << std::endl;
 	}
 
-	ID = glCreateProgram();
-	glAttachShader(ID, vertexShader);
-	glAttachShader(ID, fragmentShader);
-	glLinkProgram(ID);
+	// create shader program
+	shaderProgram = glCreateProgram();
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragmentShader);
+	glLinkProgram(shaderProgram);
 
-	glGetProgramiv(ID, GL_LINK_STATUS, &success);
+	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
 	if (!success) {
-		glGetProgramInfoLog(ID, 512, NULL, infoLog);
+		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
 		std::cout << "Shader program linking failed: " << infoLog << std::endl;
 	}
 
+	// cleanup
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
-
 }
 
+// use this program
 void Shader::use() {
-	glUseProgram(ID);
+	glUseProgram(shaderProgram);
 }
 
-void Shader::setBool(const std::string &name, bool value) const {
-	glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
+// setters for different types
+void Shader::setBool(const char* name, bool value) const {
+	glUniform1i(glGetUniformLocation(shaderProgram, name), (int)value);
 }
 
-void Shader::setInt(const std::string &name, int value) const {
-	glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
+void Shader::setInt(const char* name, int value) const {
+	glUniform1i(glGetUniformLocation(shaderProgram, name), value);
 }
 
-void Shader::setFloat(const std::string &name, float value) const {
-	glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
+void Shader::setFloat(const char* name, float value) const {
+	glUniform1f(glGetUniformLocation(shaderProgram, name), value);
+}
+
+void Shader::setMatrix4fv(const char* name, glm::mat4 value) const {
+	// args: location, number of matricies, transpose, matrix4fv
+	// glm::value_ptr(value), because glm type is incompatible with the opengl one
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, name), 1, GL_FALSE, glm::value_ptr(value));
 }
