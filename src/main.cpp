@@ -121,8 +121,7 @@ int main() {
 	shaderProgram.setMat4("proj", proj);
 
 	Mesh cube(vertices, sizeof(vertices), NULL, shaderProgram, glm::vec3(0.0f, 0.0f, -1.0f),  glm::vec3(1.0f, 0.0f, 0.0f));
-	cube.omega[2] = 10.0f;
-	cube.angles[0] = 0.1f;
+	cube.setAngularMomentum(glm::vec3(1.0f, 0.0f, 5.0f));
 
 	// shader program for lights
 	//Shader lightProgram("src/vertexShader.vert", "src/lightFragmentShader.frag");

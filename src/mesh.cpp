@@ -36,11 +36,10 @@ void Mesh::loadTexture() {
 }
 
 void Mesh::update(float dT) {
-	// omega 012 - xyz
 	// z is up, x from screen
-	angles[0] += (omega[0] * glm::cos(angles[1]) + omega[1] * glm::sin(angles[1])) * dT;
-	angles[1] += omega[2] * dT; 
-	angles[2] += (omega[2] * glm::cos(angles[0]) + omega[0] * glm::sin(angles[1]) * glm::sin(angles[0]) - omega[1] * glm::sin(angles[0]) * glm::cos(angles[1])) * dT;
+	angles.x += (omega.x * glm::cos(angles.y) + omega.y * glm::sin(angles.y)) * dT;
+	angles.y += omega.z * dT; 
+	angles.z += (omega.z * glm::cos(angles.x) + omega.x * glm::sin(angles.y) * glm::sin(angles.x) - omega.y * glm::sin(angles.x) * glm::cos(angles.y)) * dT;
 	// rotate the model according to euler angles
 	model = glm::mat4(1.0f);
 
@@ -54,13 +53,13 @@ void Mesh::update(float dT) {
 	glm::vec4 z = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
 
 	// phi around z
-	rot1 = glm::rotate(rot1, angles[1], glm::vec3(z.x, z.y, z.z));
+	rot1 = glm::rotate(rot1, angles.y, glm::vec3(z.x, z.y, z.z));
 	x = rot1 * x;
 	// theta around new x
-	rot2 = glm::rotate(rot2, angles[0], glm::vec3(x.x, x.y, x.z));
+	rot2 = glm::rotate(rot2, angles.x, glm::vec3(x.x, x.y, x.z));
 	z = rot2 * z;
 	// psi around new z
-	rot3 = glm::rotate(rot3, angles[2], glm::vec3(z.x, z.y, z.z));
+	rot3 = glm::rotate(rot3, angles.z, glm::vec3(z.x, z.y, z.z));
 	model = trans * rot3 * rot2 * rot1 * model;
 	shaderProgram.setMat4("model", model);
 	model = glm::inverse(model);
@@ -72,4 +71,9 @@ void Mesh::render() {
 	shaderProgram.setVec3("defColor", color);
 	glBindVertexArray(VAO);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+void Mesh::setAngularMomentum(glm::vec3 _angularMomentum) {
+	angularMomentum = _angularMomentum;
+	omega = angularMomentum / MoI;
 }
