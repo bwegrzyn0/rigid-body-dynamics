@@ -83,20 +83,34 @@ void Shader::use() {
 }
 
 // setters for different types
-void Shader::setBool(const char* name, bool value) const {
+void Shader::setBool(const char* name, bool value) {
+	use();
 	glUniform1i(glGetUniformLocation(shaderProgram, name), (int)value);
 }
 
-void Shader::setInt(const char* name, int value) const {
+void Shader::setInt(const char* name, int value) {
+	use();
 	glUniform1i(glGetUniformLocation(shaderProgram, name), value);
 }
 
-void Shader::setFloat(const char* name, float value) const {
+void Shader::setFloat(const char* name, float value) {
+	use();
 	glUniform1f(glGetUniformLocation(shaderProgram, name), value);
 }
 
-void Shader::setMatrix4fv(const char* name, glm::mat4 value) const {
+void Shader::setMat4(const char* name, glm::mat4 value) {
 	// args: location, number of matricies, transpose, matrix4fv
-	// glm::value_ptr(value), because glm type is incompatible with the opengl one
+	// gl:edm::value_ptr(value), because glm type is incompatible with the opengl one
+	use();
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, name), 1, GL_FALSE, glm::value_ptr(value));
+}
+
+void Shader::setVec4(const char* name, glm::vec4 value) {
+	use();
+	glUniform4fv(glGetUniformLocation(shaderProgram, name), 1, glm::value_ptr(value));
+}
+
+void Shader::setVec3(const char* name, glm::vec3 value) {
+	use();
+	glUniform3fv(glGetUniformLocation(shaderProgram, name), 1, glm::value_ptr(value));
 }
