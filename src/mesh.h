@@ -20,12 +20,11 @@ class Mesh {
 		glm::vec3 MoI = glm::vec3(1.0f, 1.0f, 1.0f);
 		// principal axes of inertia
 		glm::vec3 AoI[3] = {glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)}; 
-		// euler angles; theta, phi, psi
-		glm::vec3 angles = glm::vec3(0.0f, 0.0f, 0.0f);
 		glm::vec3 omega = glm::vec3(0.0f, 0.0f, 0.0f);
 		glm::vec3 angularMomentum = glm::vec3(0.0f, 0.0f, 0.0f);
+		glm::mat4 rotationMatrix = glm::mat4(1.0f);
 
-		Mesh(float*  _vertices, int sizeofVertices, const char* _textureSource, Shader& _shaderProgram, glm::vec3 _pos, glm::vec3 _color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+		Mesh(float*  _vertices, int sizeofVertices, const char* _textureSource, Shader& _shaderProgram, glm::vec3 _pos, glm::vec3 _color = glm::vec3(1.0f, 1.0f, 1.0f));
 		void loadTexture();
 		void setAngularMomentum(glm::vec3 _angluarMomentum);
 		void update(float dT);

@@ -6,8 +6,7 @@
 #include "shader.h"
 #include <iostream>
 
-Mesh::Mesh(float* _vertices, int sizeofVertices, const char* _textureSource, Shader& _shaderProgram, glm::vec3 _pos,  glm::vec3 _color) 
-: shaderProgram(_shaderProgram) {
+Mesh::Mesh(float* _vertices, int sizeofVertices, const char* _textureSource, Shader& _shaderProgram, glm::vec3 _pos,  glm::vec3 _color) : shaderProgram(_shaderProgram) {
 	vertices = _vertices;
 	textureSource = _textureSource;
 	pos = _pos;
@@ -35,32 +34,31 @@ void Mesh::loadTexture() {
 	// TODO	
 }
 
-void Mesh::update(float dT) {
-	// z is up, x from screen
-	angles.x += (omega.x * glm::cos(angles.y) + omega.y * glm::sin(angles.y)) * dT;
-	angles.y += omega.z * dT; 
-	angles.z += (omega.z * glm::cos(angles.x) + omega.x * glm::sin(angles.y) * glm::sin(angles.x) - omega.y * glm::sin(angles.x) * glm::cos(angles.y)) * dT;
-	// rotate the model according to euler angles
-	model = glm::mat4(1.0f);
+glm::vec3 eps = glm::vec3(1.0f);
 
-	glm::mat4 rot1 = glm::mat4(1.0f);
-	glm::mat4 rot2 = glm::mat4(1.0f);
-	glm::mat4 rot3 = glm::mat4(1.0f);
+void Mesh::update(float dT) {
 	glm::mat4 trans = glm::mat4(1.0f);
 	trans = glm::translate(trans, pos);
-	// z is up, x is from screen
-	glm::vec4 x = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
-	glm::vec4 z = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+	model = glm::mat4(1.0f);
 
-	// phi around z
-	rot1 = glm::rotate(rot1, angles.y, glm::vec3(z.x, z.y, z.z));
-	x = rot1 * x;
-	// theta around new x
-	rot2 = glm::rotate(rot2, angles.x, glm::vec3(x.x, x.y, x.z));
-	z = rot2 * z;
-	// psi around new z
-	rot3 = glm::rotate(rot3, angles.z, glm::vec3(z.x, z.y, z.z));
-	model = trans * rot3 * rot2 * rot1 * model;
+	// compute omega based on the angular momentum and orientation
+	glm::vec3* AoI_worldspace = new glm::vec3[3];
+	AoI_worldspace[0] = glm::vec3(rotationMatrix * glm::vec4(AoI[0], 1.0f));
+	AoI_worldspace[1] = glm::vec3(rotationMatrix * glm::vec4(AoI[1], 1.0f));
+	AoI_worldspace[2] = glm::vec3(rotationMatrix * glm::vec4(AoI[2], 1.0f));
+	omega.x = glm::dot(angularMomentum, AoI_worldspace[0]) / MoI[0];
+	omega.y = glm::dot(angularMomentum, AoI_worldspace[1]) / MoI[1];
+	omega.z = glm::dot(angularMomentum, AoI_worldspace[2]) / MoI[2];
+
+	float omegaLength = glm::length(omega);
+	glm::vec3 omega_worldspace = glm::vec3(glm::inverse(rotationMatrix) * glm::vec4(omega, 1));
+
+	rotationMatrix = glm::rotate(rotationMatrix, omegaLength * dT, omega_worldspace);	
+
+	// std::cout << omegaLength << std::endl;
+
+	model = trans * rotationMatrix * model;
+
 	shaderProgram.setMat4("model", model);
 	model = glm::inverse(model);
 	model = glm::transpose(model);
