@@ -6,7 +6,7 @@
 
 class Mesh {	
 	private:
-		Shader& shaderProgram;
+		Shader& shader;
 	public: 
 		unsigned int VBO;
 		unsigned int VAO;
@@ -24,7 +24,7 @@ class Mesh {
 		glm::vec3 angularMomentum = glm::vec3(0.0f, 0.0f, 0.0f);
 		glm::mat4 rotationMatrix = glm::mat4(1.0f);
 
-		Mesh(float*  _vertices, int sizeofVertices, const char* _textureSource, Shader& _shaderProgram, glm::vec3 _pos, glm::vec3 _color = glm::vec3(1.0f, 1.0f, 1.0f));
+		Mesh(float*  _vertices, int sizeofVertices, const char* _textureSource, Shader& _shader, glm::vec3 _pos, glm::vec3 _color = glm::vec3(1.0f, 1.0f, 1.0f));
 		void loadTexture();
 		void update(float dT);
 		void render();

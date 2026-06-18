@@ -8,7 +8,7 @@
 #include "shader.h"
 #include <iostream>
 
-Mesh::Mesh(float* _vertices, int sizeofVertices, const char* _textureSource, Shader& _shaderProgram, glm::vec3 _pos,  glm::vec3 _color) : shaderProgram(_shaderProgram) {
+Mesh::Mesh(float* _vertices, int sizeofVertices, const char* _textureSource, Shader& _shader, glm::vec3 _pos,  glm::vec3 _color) : shader(_shader) {
 	vertices = _vertices;
 	textureSource = _textureSource;
 	pos = _pos;
@@ -17,7 +17,7 @@ Mesh::Mesh(float* _vertices, int sizeofVertices, const char* _textureSource, Sha
 		loadTexture();
 
 	// vertices format: 
-	// 3f: pos, 2f: texture coords
+	// 3f: pos, 3f: normals 
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
@@ -33,7 +33,6 @@ Mesh::Mesh(float* _vertices, int sizeofVertices, const char* _textureSource, Sha
 }
 
 void Mesh::loadTexture() {
-	// TODO	
 }
 
 void Mesh::update(float dT) {
@@ -73,8 +72,8 @@ void Mesh::update(float dT) {
 	// nearby values are conserved, those oscillate a bit
 	float E = omega.x * omega.x * MoI[0] + omega.y * omega.y * MoI[1] + omega.z * omega.z * MoI[2];
 	float M = omega.x * omega.x * MoI[0] * MoI[0] + omega.y * omega.y * MoI[1] * MoI[1] + omega.z * omega.z * MoI[2] * MoI[2];
-	std::cout << "Energy: " <<  E << std::endl;
-	std::cout << "Angular momentum: " << M << std::endl;
+	//std::cout << "Energy: " <<  E << std::endl;
+	//std::cout << "Angular momentum: " << M << std::endl;
 
 	// rotate the model appropriately
 	float omegaLength = glm::length(omega);
@@ -83,15 +82,15 @@ void Mesh::update(float dT) {
 		rotationMatrix = glm::rotate(rotationMatrix, omegaLength * dT, omega_worldspace);
 	// apply all the transformations
 	model = trans * rotationMatrix * model;
-	shaderProgram.setMat4("model", model);
+	shader.setMat4("model", model);
 	// transpose inverse for the normals (it's costly for the shader so we do it here)
 	model = glm::inverse(model);
 	model = glm::transpose(model);
-	shaderProgram.setMat4("transposeInverseModel", model);
+	shader.setMat4("transposeInverseModel", model);
 }
 
 void Mesh::render() {
-	shaderProgram.setVec3("defColor", color);
+	shader.setVec3("defColor", color);
 	glBindVertexArray(VAO);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 }
