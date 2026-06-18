@@ -155,7 +155,7 @@ int main() {
 
 	// the main cube
 	Mesh cube(vertices, sizeof(vertices), NULL, shader, glm::vec3(0.0f, 0.0f, 0.0f),  glm::vec3(0.0f, 1.0f, 0.0f));
-	cube.setAngularMomentum(glm::vec3(0.0f, 0.0f, 0.0f));
+	cube.setAngularMomentum(glm::vec3(0.001f, 3.0f, 0.0f));
 	// cube.rotationMatrix = glm::rotate(cube.rotationMatrix, 0.2f, glm::vec3(1.0f, 0.0f, 0.0f));
 	cube.MoI = glm::vec3(1.0f, 3.0f, 6.0f);
 
@@ -197,20 +197,35 @@ int main() {
 		shader.setMat4("view", view);
 		skyboxShader.setMat4("view", view);
 
+		// for the reflections
+		glm::mat4 cam = glm::mat4(1.0f);
+		cam = glm::rotate(cam, -cameraAngles.y, glm::vec3(0.0f, 1.0f, 0.0f));
+		cam = glm::rotate(cam, -cameraAngles.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		cam = glm::translate(cam, glm::vec3(0.0f, 0.0f, cameraDistance));
+		glm::vec4 cameraPos = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		cameraPos = cam * cameraPos;
+		shader.setVec3("cameraPos", glm::vec3(cameraPos));
+
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox);
+
+		// draw other objects
+		glDepthFunc(GL_LESS);
+		cube.update(dT);
+		cube.render();
+		 
 		// draw the skybox
+		// rendered last because it always has a depth of 1.0f
+		// set inside the shader by setting z=w (perspective division then has z/w=1.0f)
+		// draw objects with depth <= 1.0f
+		glDepthFunc(GL_LEQUAL);
 		glDepthMask(GL_FALSE);
 		skyboxShader.use();
 		glBindVertexArray(skyboxMesh.VAO);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glDepthMask(GL_TRUE);
-
-		// draw other objects
-		cube.update(dT);
-		cube.render();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();

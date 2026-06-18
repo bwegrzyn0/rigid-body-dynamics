@@ -12,7 +12,8 @@ void main() {
 	// pos = P * V * vec4(x,y,z,1)
 	// P - projection matrix
 	// V - view matrix
-	gl_Position = proj * mat4(mat3(view)) * vec4(aPos, 1.0f);
+	vec4 pos = (proj * mat4(mat3(view)) * vec4(aPos, 1.0f));
+	gl_Position = pos.xyww;
 	TexCoords = aPos;
 }
 	
