@@ -26,7 +26,7 @@ class Mesh {
 
 		Mesh(float*  _vertices, int sizeofVertices, const char* _textureSource, Shader& _shaderProgram, glm::vec3 _pos, glm::vec3 _color = glm::vec3(1.0f, 1.0f, 1.0f));
 		void loadTexture();
-		void setAngularMomentum(glm::vec3 _angluarMomentum);
 		void update(float dT);
 		void render();
+		void setAngularMomentum(glm::vec3 _angularMomentum);
 };

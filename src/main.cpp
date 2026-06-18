@@ -120,9 +120,10 @@ int main() {
 	proj = glm::perspective(45.0f, (float(WIDTH))/((float)HEIGHT), 0.1f, 100.0f);
 	shaderProgram.setMat4("proj", proj);
 
-	Mesh cube(vertices, sizeof(vertices), NULL, shaderProgram, glm::vec3(0.0f, 0.0f, -1.0f),  glm::vec3(1.0f, 0.0f, 0.0f));
-	cube.setAngularMomentum(glm::vec3(0.4f, 5.0f, 0.3f));
-	cube.MoI = glm::vec3(0.5f, 2.0f, 3.0f);
+	Mesh cube(vertices, sizeof(vertices), NULL, shaderProgram, glm::vec3(0.0f, 0.0f, -3.0f),  glm::vec3(1.0f, 0.0f, 0.0f));
+	cube.setAngularMomentum(glm::vec3(0.0f, 5.0f, 0.001f));
+//	cube.rotationMatrix = glm::rotate(cube.rotationMatrix, 0.2f, glm::vec3(1.0f, 0.0f, 0.0f));
+	cube.MoI = glm::vec3(1.0f, 3.0f, 6.0f);
 
 	// shader program for lights
 	//Shader lightProgram("src/vertexShader.vert", "src/lightFragmentShader.frag");

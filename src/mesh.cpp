@@ -3,6 +3,8 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/norm.hpp>
 #include "shader.h"
 #include <iostream>
 
@@ -34,32 +36,54 @@ void Mesh::loadTexture() {
 	// TODO	
 }
 
-glm::vec3 eps = glm::vec3(1.0f);
-
 void Mesh::update(float dT) {
 	glm::mat4 trans = glm::mat4(1.0f);
 	trans = glm::translate(trans, pos);
 	model = glm::mat4(1.0f);
 
-	// compute omega based on the angular momentum and orientation
 	glm::vec3* AoI_worldspace = new glm::vec3[3];
 	AoI_worldspace[0] = glm::vec3(rotationMatrix * glm::vec4(AoI[0], 1.0f));
 	AoI_worldspace[1] = glm::vec3(rotationMatrix * glm::vec4(AoI[1], 1.0f));
 	AoI_worldspace[2] = glm::vec3(rotationMatrix * glm::vec4(AoI[2], 1.0f));
-	omega.x = glm::dot(angularMomentum, AoI_worldspace[0]) / MoI[0];
-	omega.y = glm::dot(angularMomentum, AoI_worldspace[1]) / MoI[1];
-	omega.z = glm::dot(angularMomentum, AoI_worldspace[2]) / MoI[2];
+
+	omega.x += (MoI[1] - MoI[2]) / MoI[0] * omega.y * omega.z * dT;
+	float omega_2 = (MoI[2] - MoI[0]) / MoI[1] * omega.x;
+	float omega_3 = -(MoI[0] - MoI[1]) / MoI[2] * omega.x;
+	float sqrt_omegas = glm::sqrt(omega_2 * omega_3);
+	float k = glm::sqrt(-((MoI[0] - MoI[1]) * MoI[1]) / (MoI[2] * (MoI[2] - MoI[0])));
+	// omega.y dot = omega_2 * omega.z
+	// omega.z dot = -omega_3 * omega.y
+	// system of coupled diff eq
+	float phase = glm::atan(omega.z / k, omega.y);	
+	// std::cout << phase << std::endl;
+	if (phase != phase)
+		phase = 0;
+	float A = glm::sqrt(omega.y * omega.y + omega.z * omega.z / (k * k));
+	if (omega.y == 0 && omega.z >= 0) {
+		omega.y = -A * glm::sin(sqrt_omegas * dT);
+		omega.z = A * k * glm::cos(sqrt_omegas * dT);
+	} else if (omega.y == 0 && omega.z < 0) {
+		omega.y = A * glm::sin(sqrt_omegas * dT);
+		omega.z = -A * k * glm::cos(sqrt_omegas * dT);
+	} else {
+		omega.y = A * glm::cos(sqrt_omegas * dT + phase);
+		omega.z = A * k * glm::sin(sqrt_omegas * dT + phase);
+	}
+	// correction when atan returns pi (numerical error accumulates leading to inaccurate results)
+
+	float E = omega.x * omega.x * MoI[0] + omega.y * omega.y * MoI[1] + omega.z * omega.z * MoI[2];
+	float M = omega.x * omega.x * MoI[0] * MoI[0] + omega.y * omega.y * MoI[1] * MoI[1] + omega.z * omega.z * MoI[2] * MoI[2];
+	std::cout << "Energy: " <<  E << std::endl;
+	std::cout << "Angular momentum: " << M << std::endl;
 
 	float omegaLength = glm::length(omega);
-	glm::vec3 omega_worldspace = glm::vec3(glm::inverse(rotationMatrix) * glm::vec4(omega, 1));
+	glm::vec3 omega_worldspace = glm::vec3(glm::inverse(rotationMatrix) * glm::vec4(omega, 1.0f));
 
-	rotationMatrix = glm::rotate(rotationMatrix, omegaLength * dT, omega_worldspace);	
-
-	// std::cout << omegaLength << std::endl;
+	rotationMatrix = glm::rotate(rotationMatrix, omegaLength * dT, omega_worldspace);
 
 	model = trans * rotationMatrix * model;
-
 	shaderProgram.setMat4("model", model);
+	// transpose inverse for the normals
 	model = glm::inverse(model);
 	model = glm::transpose(model);
 	shaderProgram.setMat4("transposeInverseModel", model);
@@ -73,5 +97,12 @@ void Mesh::render() {
 
 void Mesh::setAngularMomentum(glm::vec3 _angularMomentum) {
 	angularMomentum = _angularMomentum;
-	omega = angularMomentum / MoI;
+	// compute omega based on the angular momentum and orientation
+	glm::vec3* AoI_worldspace = new glm::vec3[3];
+	AoI_worldspace[0] = glm::vec3(rotationMatrix * glm::vec4(AoI[0], 1.0f));
+	AoI_worldspace[1] = glm::vec3(rotationMatrix * glm::vec4(AoI[1], 1.0f));
+	AoI_worldspace[2] = glm::vec3(rotationMatrix * glm::vec4(AoI[2], 1.0f));
+	omega.x = glm::dot(angularMomentum, AoI_worldspace[0]) / MoI[0];
+	omega.y = glm::dot(angularMomentum, AoI_worldspace[1]) / MoI[1];
+	omega.z = glm::dot(angularMomentum, AoI_worldspace[2]) / MoI[2];
 }
